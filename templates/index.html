@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <title>Remote Control</title>
     <style>
-        * { padding: 0; margin: 0 }
+        * { padding: 0; margin: 0; }
         img { width: 100%; }
         .loading {
             position: absolute;
@@ -16,23 +16,54 @@
             transform: translate(-50%, -50%);
             font-size: 24px;
         }
+        .click-feedback {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <div class="loading">Loading...</div>
     <img src="{{ url_for('video_feed') }}" onload="document.querySelector('.loading').style.display='none';">
+    <div class="info-panel">
+        <div>Latency: <span id="latency">0</span> ms</div>
+        <div>Frame Rate: <span id="frame-rate">0</span> FPS</div>
+    </div>
     <script>
-        $(document).click(
-            function (event) {
-                event = event || window.event;
-                var x = event.offsetX || event.originalEvent.layerX;
-                var y = event.offsetY || event.originalEvent.layerY;
-                var x_rate = x / document.body.clientWidth;
-                var y_rate = y / document.body.clientHeight;
-                sendPointerPosition(x_rate, y_rate);
-            }
-        );
+        // 点击事件处理
+        $(document).click(function (event) {
+            event = event || window.event;
+            var x = event.offsetX || event.originalEvent.layerX;
+            var y = event.offsetY || event.originalEvent.layerY;
+            var x_rate = x / document.body.clientWidth;
+            var y_rate = y / document.body.clientHeight;
+            sendPointerPosition(x_rate, y_rate);
 
+            // 添加点击反馈
+            var feedback = document.createElement('div');
+            feedback.className = 'click-feedback';
+            feedback.style.left = (x_rate * 100) + '%';
+            feedback.style.top = (y_rate * 100) + '%';
+            document.body.appendChild(feedback);
+            setTimeout(() => document.body.removeChild(feedback), 500);
+        });
+
+        // 发送点击位置到后端
         function sendPointerPosition(xrate, yrate) {
             $.ajax({
                 url: "/pointer?xrate=" + xrate + "&yrate=" + yrate,
@@ -45,6 +76,32 @@
                 }
             });
         }
+
+        // 检测网络延迟并调整帧率
+        let latency = 0;
+        let frameRate = 0;
+
+        function checkLatency() {
+            const start = Date.now();
+            fetch('/ping').then(() => {
+                latency = Date.now() - start;
+                console.log('Latency:', latency);
+                // 更新延迟信息
+                document.getElementById('latency').textContent = latency;
+
+                // 将延迟信息传递给后端
+                $.ajax({
+                    url: "/adjust_frame_rate?latency=" + latency,
+                    type: "get",
+                    success: function (data) {
+                        // 更新帧率信息
+                        frameRate = data.frameRate || 0;
+                        document.getElementById('frame-rate').textContent = frameRate;
+                    }
+                });
+            });
+        }
+        setInterval(checkLatency, 1000);  // 每1秒检测一次
     </script>
 </body>
 </html>

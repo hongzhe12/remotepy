@@ -1,0 +1,6 @@
+# 配置
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
+INITIAL_FRAME_RATE = 10  # 初始帧率
+MIN_FRAME_RATE = 1       # 最小帧率
+MAX_FRAME_RATE = 30      # 最大帧率
