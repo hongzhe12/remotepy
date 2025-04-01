@@ -93,6 +93,7 @@ def pointer():
         pyautogui.click(x, y)
         return "success"
     except Exception as e:
+        print(e)
         return str(e), 500
 
 
