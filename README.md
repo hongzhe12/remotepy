@@ -5,8 +5,6 @@
 ![Screenshot_2025-06-02-19-17-41-175_com android ch](https://github.com/user-attachments/assets/6c99097f-2ddc-4e5e-96ba-f928f0137dbb)
 
 
-![Uploading Screenshot_2025-06-02-19-17-21-463_com.android.ch.jpg…]()
-
 
 #### 实现细节：
 - **使用 `mss` 库捕获屏幕**：
